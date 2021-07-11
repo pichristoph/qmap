@@ -11,6 +11,7 @@
 
 #include "heuristic/HeuristicMapper.hpp"
 #include "exact/ExactMapper.hpp"
+#include "ecc/EccMapper.hpp"
 
 namespace py = pybind11;
 namespace nl = nlohmann;
@@ -148,6 +149,7 @@ PYBIND11_MODULE(pyqmap, m) {
 	py::enum_<Method>(m, "Method")
 			.value("heuristic", Method::Heuristic)
 			.value("exact", Method::Exact)
+			.value("ecc", Method::Ecc)
 			.export_values();
 
 	py::enum_<InitialLayoutStrategy>(m, "InitialLayoutStrategy")

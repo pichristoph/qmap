@@ -11,7 +11,7 @@
 #define QMAP_MAPPINGRESULTS_HPP
 
 enum class Method {
-	None, Exact, Heuristic
+	None, Exact, Heuristic, Ecc
 };
 static std::string toString(const Method method) {
 	switch (method) {
@@ -21,6 +21,8 @@ static std::string toString(const Method method) {
 			return "exact";
 		case Method::Heuristic:
 			return "heuristic";
+		case Method::Ecc:
+			return "ecc";
 	}
 	return " ";
 }
@@ -29,6 +31,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM( Method, {
 	{Method::None, "none"},
 	{Method::Exact, "exact"},
 	{Method::Heuristic, "heuristic"},
+	{Method::Ecc, "ecc"}
 })
 
 struct MappingResults {

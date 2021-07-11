@@ -28,6 +28,7 @@ if (Boost_FOUND)
 	endif()
 
 	add_qmap_executable(heuristic)
+	add_qmap_executable(ecc)
 else()
 	message(STATUS "Did not find Boost! Commandline applications will not be an available target!")
 endif ()

@@ -74,3 +74,6 @@ endif ()
 
 # heuristic mapper project library
 add_qmap_library(heuristic HeuristicMapper)
+
+# error-correcting code mapper project library
+add_qmap_library(ecc EccMapper)
