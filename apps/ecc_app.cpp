@@ -16,7 +16,7 @@ int main(int argc, char** argv) {
             ("help,h", "produce help message")
             ("in", po::value<std::string>()->required(), "File to read from")
             ("out", po::value<std::string>()->required(), "File to write to")
-            ("arch", po::value<std::string>(), "Architecture to use (points to a file)")
+            ("arch", po::value<std::string>()->required(), "Architecture to use (points to a file)")
             ("calibration", po::value<std::string>(), "Calibration to use (points to a file)")
             ("initiallayout", po::value<std::string>(), R"(Initial layout strategy ("identity" | "static" | "dynamic"))")
             ("layering", po::value<std::string>(), R"(Layering strategy ("individual" | "disjoint"))")

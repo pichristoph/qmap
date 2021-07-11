@@ -14,6 +14,10 @@ public:
 	using Mapper::Mapper; // import constructors from parent class
 
 	void map(const MappingSettings& ms) override;
+	
+	enum Ecc {
+		Q3, Q9
+	};
 
 	struct Node {
 		unsigned long costFixed = 0;
