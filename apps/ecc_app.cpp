@@ -8,6 +8,7 @@
 #include <boost/program_options.hpp>
 
 #include "ecc/EccMapper.hpp"
+#include "ecc/Q3ShorEccMapper.hpp"
 
 int main(int argc, char** argv) {
     namespace po = boost::program_options;
@@ -72,7 +73,8 @@ int main(int argc, char** argv) {
 		}
 	}
 
-    EccMapper mapper(qc, arch);
+    //TODO: read args and instantiate appropriate mapper
+    EccMapper *mapper = new Q3ShorEccMapper(qc, arch);
 
 	MappingSettings ms{};
 	ms.layeringStrategy = LayeringStrategy::IndividualGates;
@@ -109,9 +111,11 @@ int main(int argc, char** argv) {
         ms.teleportationFake = vm.count("teleportation_fake") > 0;
     }
 
-    mapper.map(ms);
+    mapper->map(ms);
 
-	mapper.dumpResult(vm["out"].as<std::string>());
+	mapper->dumpResult(vm["out"].as<std::string>());
 
-	mapper.printResult(std::cout, vm.count("ps"));
+	mapper->printResult(std::cout, vm.count("ps"));
+
+	delete mapper;
 }

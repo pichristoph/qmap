@@ -4,14 +4,20 @@
  */
 
 #include "ecc/EccMapper.hpp"
+#include "Mapper.hpp"
 
 #include <chrono>
 //#include <stdlib.h>
 
+EccMapper::EccMapper(qc::QuantumComputation& qc, Architecture& architecture, Ecc ecc_type, int nRedQubits): Mapper(qc, architecture) {
+    ecc=ecc_type;
+    nRedundantQubits = nRedQubits;
+}
+
 void EccMapper::map(const MappingSettings& ms) {
 	settings = ms;
-	
-	//TODO currently, specify ECC here. 
+
+	//TODO currently, specify ECC here.
 	ecc = Ecc::Q3;
 	//ecc = Ecc::Q9;
 
@@ -71,7 +77,7 @@ void EccMapper::map(const MappingSettings& ms) {
         	auto type = qc::I;
         	switch(gate.get()->getType()) {
             case qc::I: break;
-            case qc::X: 
+            case qc::X:
             	type = qc::Z; break;
             case qc::H:
             	type = qc::H; break;
@@ -79,7 +85,7 @@ void EccMapper::map(const MappingSettings& ms) {
             	type = qc::Y; break;
             case qc::Z:
             	type = qc::X; break;
-            
+
             //TODO check S, T, V
             case qc::S:
             case qc::Sdag:
@@ -164,11 +170,11 @@ void EccMapper::writeDecoding() {
     	    writeCnot(i+6*nQubits, i+7*nQubits);
     	    writeCnot(i+6*nQubits, i+8*nQubits);
     	    writeToffoli(i+7*nQubits, i+8*nQubits, i+6*nQubits);
-    	    
+
     	    qcMapped.emplace_back<qc::StandardOperation>(nQubitsMapped, i, qc::H);
     	    qcMapped.emplace_back<qc::StandardOperation>(nQubitsMapped, i+3*nQubits, qc::H);
     	    qcMapped.emplace_back<qc::StandardOperation>(nQubitsMapped, i+6*nQubits, qc::H);
-    	    
+
     	    writeCnot(i, i+3*nQubits);
     	    writeCnot(i, i+6*nQubits);
     	    writeToffoli(i+3*nQubits, i+6*nQubits, i);
@@ -202,11 +208,6 @@ void EccMapper::initResults() {
 
 	results.input_name = qc.getName();
 	results.input_qubits = qc.getNqubits();
-	//TODO remove architectural information, replaced by ECC
-	results.architecture = architecture.getArchitectureName();
-	results.calibration = architecture.getCalibrationName();
-	results.layeringStrategy = settings.layeringStrategy;
-	results.initialLayoutStrategy = settings.initialLayoutStrategy;
 
 	results.output_name = qc.getName() + "_mapped";
 	results.output_qubits = qc.getNqubits()*3;	//TODO remove if error case (no ECC) is handled correclty
@@ -215,15 +216,10 @@ void EccMapper::initResults() {
 	} else if(ecc==Ecc::Q9) {
 		results.output_qubits = qc.getNqubits()*9;
 	}
-	
+
 
 	qcMapped.addQubitRegister(results.output_qubits);
 	results.method = Method::Ecc;
-
-	results.seed = settings.teleportationSeed;
-	results.input_teleportation_qubits = settings.teleportationQubits;
-	results.output_teleportation_qubits = settings.teleportationQubits;
-	results.output_teleportation_fake = settings.teleportationFake;
 }
 
 void EccMapper::writeCnot(unsigned short control, unsigned short target) {
