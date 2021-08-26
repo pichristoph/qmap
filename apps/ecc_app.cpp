@@ -8,7 +8,6 @@
 #include <boost/program_options.hpp>
 
 #include "ecc/EccMapper.hpp"
-#include "ecc/Q3ShorEccMapper.hpp"
 
 int main(int argc, char** argv) {
     namespace po = boost::program_options;
@@ -17,12 +16,7 @@ int main(int argc, char** argv) {
             ("help,h", "produce help message")
             ("in", po::value<std::string>()->required(), "File to read from")
             ("out", po::value<std::string>()->required(), "File to write to")
-            ("arch", po::value<std::string>()->required(), "Architecture to use (points to a file)")
-            ("calibration", po::value<std::string>(), "Calibration to use (points to a file)")
-            ("initiallayout", po::value<std::string>(), R"(Initial layout strategy ("identity" | "static" | "dynamic"))")
-            ("layering", po::value<std::string>(), R"(Layering strategy ("individual" | "disjoint"))")
-            ("teleportation", po::value<unsigned long long int>()->implicit_value(0), "Use teleportation with optionally specifying the seed for the RNG used for initial placement")
-            ("teleportation_fake", "Assign qubits as ancillary for teleportation in the initial placement but don't actually use them")
+            ("ecc", po::value<std::string>()->required(), "Error correcting code to use")
             ("ps", "print statistics")
             ("verbose", "Increase verbosity and output additional information to stderr")
             ;
@@ -50,7 +44,7 @@ int main(int argc, char** argv) {
 		std::cerr << ss.str() << std::endl;
 		std::exit(1);
 	}
-	const std::string cm = vm["arch"].as<std::string>();
+	const std::string cm = "extern/architectures/ibm_qx5.arch";
 	Architecture arch{};
 	try {
 		arch.loadCouplingMap(cm);
@@ -61,57 +55,24 @@ int main(int argc, char** argv) {
 		std::exit(1);
 	}
 
-	if (vm.count("calibration")) {
-		const std::string cal = vm["calibration"].as<std::string>();
-		try {
-			arch.loadCalibrationData(cal);
-		} catch (std::exception const& e) {
-			std::stringstream ss{};
-			ss << "Could not import calibration data: " << e.what();
-			std::cerr << ss.str() << std::endl;
-			std::exit(1);
-		}
-	}
 
     //TODO: read args and instantiate appropriate mapper
-    EccMapper *mapper = new Q3ShorEccMapper(qc, arch);
+    EccMapper *mapper = nullptr;
 
-	MappingSettings ms{};
-	ms.layeringStrategy = LayeringStrategy::IndividualGates;
-	if (vm.count("layering")) {
-		std::string layering = vm["layering"].as<std::string>();
-		if (layering == "individual") {
-			ms.layeringStrategy = LayeringStrategy::IndividualGates;
-		} else if (layering == "disjoint") {
-			ms.layeringStrategy = LayeringStrategy::DisjointQubits;
-		} else {
-			ms.layeringStrategy = LayeringStrategy::None;
-		}
-	}
+    const std::string eccName = vm["ecc"].as<std::string>();
 
-	ms.initialLayoutStrategy = InitialLayoutStrategy::Dynamic;
-	if (vm.count("initiallayout")) {
-		std::string initialLayout = vm["initiallayout"].as<std::string>();
-		if (initialLayout == "identity") {
-			ms.initialLayoutStrategy = InitialLayoutStrategy::Identity;
-		} else if (initialLayout == "static") {
-			ms.initialLayoutStrategy = InitialLayoutStrategy::Static;
-		} else if (initialLayout == "dynamic") {
-			ms.initialLayoutStrategy = InitialLayoutStrategy::Dynamic;
-		} else {
-			ms.initialLayoutStrategy = InitialLayoutStrategy::None;
-		}
-	}
-
-	ms.verbose = vm.count("verbose") > 0;
-
-    if (vm.count("teleportation")) {
-        ms.teleportationQubits = std::min((arch.getNqubits() - qc.getNqubits()) & ~1u, 8u);
-        ms.teleportationSeed = vm["teleportation"].as<unsigned long long int>();
-        ms.teleportationFake = vm.count("teleportation_fake") > 0;
+    if(eccName.compare("Q3Shor")==0) {
+        mapper = new Q3ShorEccMapper(qc, arch);
+    } else if(eccName.compare("Q9Shor")==0) {
+        mapper = new Q9ShorEccMapper(qc, arch);
+    } else {
+        std::cerr << "No ECC found for " << eccName << std::endl;
+        std::cerr << "Available ECCs: Q3Shor, Q9Shor" << std::endl;
+        std::exit(1);
     }
 
-    mapper->map(ms);
+
+    mapper->map();
 
 	mapper->dumpResult(vm["out"].as<std::string>());
 

@@ -4,7 +4,6 @@
  */
 
 #include "Mapper.hpp"
-#include "heuristic/unique_priority_queue.hpp"
 
 #ifndef QMAP_EccMapper_HPP
 #define QMAP_EccMapper_HPP
@@ -19,26 +18,20 @@ public:
 	EccMapper(qc::QuantumComputation& qc, Architecture& architecture, Ecc ecc_type, int nRedundantQubits);
 
 	void map(const MappingSettings& ms) override;
-
+    void map();
 
 
 protected:
 
 	void initResults() override;
 
-	virtual void writeEncoding()=0;
+	virtual void writeEccEncoding()=0;
 
-	virtual void writeDecoding()=0;
+	virtual void writeEccDecoding()=0;
 
-	virtual int nRedundantQubits;
+	virtual void mapGate(std::unique_ptr<qc::Operation> &gate)=0;
 
-	/*double distanceOnArchitectureOfLogicalQubits(unsigned short control, unsigned short target) {
-		return architecture.distance(locations.at(control), locations.at(target));
-	}
-
-	double distanceOnArchitectureOfPhysicalQubits(unsigned short control, unsigned short target) {
-		return architecture.distance(control, target);
-	}*/
+	int nRedundantQubits;
 
     void writeToffoli(unsigned short c1, unsigned short c2, unsigned short target);
     void writeCnot(unsigned short control, unsigned short target);
@@ -48,3 +41,39 @@ protected:
 
 
 #endif //QMAP_EccMapper_HPP
+
+#ifndef QMAP_Q3ShorEccMapper_HPP
+#define QMAP_Q3ShorEccMapper_HPP
+
+class Q3ShorEccMapper: public EccMapper {
+public:
+    Q3ShorEccMapper(qc::QuantumComputation& qc, Architecture& architecture);
+
+protected:
+    void writeEccEncoding() override;
+
+	void writeEccDecoding() override;
+
+	void mapGate(std::unique_ptr<qc::Operation> &gate) override;
+};
+
+#endif //QMAP_Q3ShorEccMapper_HPP
+
+#ifndef QMAP_Q9ShorEccMapper_HPP
+#define QMAP_Q9ShorEccMapper_HPP
+
+class Q9ShorEccMapper: public EccMapper {
+public:
+    Q9ShorEccMapper(qc::QuantumComputation& qc, Architecture& architecture);
+
+protected:
+    void writeEccEncoding();
+
+	void writeEccDecoding();
+
+	void mapGate(std::unique_ptr<qc::Operation> &gate) override;
+};
+
+#endif //QMAP_Q9ShorEccMapper_HPP
+
+
