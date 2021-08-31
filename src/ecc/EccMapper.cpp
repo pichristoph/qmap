@@ -9,22 +9,20 @@
 #include <chrono>
 //#include <stdlib.h>
 
-EccMapper::EccMapper(qc::QuantumComputation& qc, Architecture& architecture, Ecc ecc_type, int nRedQubits): Mapper(qc, architecture) {
-    ecc=ecc_type;
-    nRedundantQubits = nRedQubits;
+EccMapper::EccMapper(struct EccInfo eccInfo, qc::QuantumComputation& quantumcomputation): ecc(eccInfo), qc(quantumcomputation) {
 }
 
 void EccMapper::map() {
     const auto start = std::chrono::steady_clock::now();
 	qc.stripIdleQubits(true, false);
+	long nInputGates = 0;
 
 	initResults();
-
-	createLayers();
 
 	writeEccEncoding();
 
     for(auto& gate: qc) {
+        nInputGates++;
         mapGate(gate);
     }
 
@@ -34,10 +32,25 @@ void EccMapper::map() {
 	std::chrono::duration<double> diff = end - start;
 	results.time = diff.count();
 	results.timeout = false;
+	results.input_gates = nInputGates;
+
+	long nOutputGates = 0; //TODO count while creating?
+	for(auto& gate: qcMapped) {
+        nOutputGates++;
+    }
+    results.output_gates = nOutputGates;
 }
 
-void EccMapper::map(const MappingSettings& ms) {
-
+std::ostream& EccMapper::printResult(std::ostream& out, bool printStatistics) {
+    double gateRatio = results.output_gates;
+    gateRatio/=results.input_gates;
+    out << "\tused error correcting code: " << ecc.name << std::endl;
+    out << "\tgate overhead: " << gateRatio << std::endl;
+	out << "\tinput qubits: " << results.input_qubits << std::endl;
+	out << "\tinput gates: " << results.input_gates << std::endl;
+	out << "\toutput qubits: " << results.output_qubits << std::endl;
+	out << "\toutput gates: " << results.output_gates << std::endl;
+	return out;
 }
 
 void EccMapper::writeToffoli(unsigned short c1, unsigned short c2, unsigned short target) {
@@ -66,7 +79,7 @@ void EccMapper::initResults() {
 	results.input_qubits = qc.getNqubits();
 
 	results.output_name = qc.getName() + "_mapped";
-	results.output_qubits = qc.getNqubits()*nRedundantQubits;	//TODO remove if error case (no ECC) is handled correclty
+	results.output_qubits = qc.getNqubits()*ecc.nRedundantQubits;	//TODO remove if error case (no ECC) is handled correclty
 
 	qcMapped.addQubitRegister(results.output_qubits);
 	results.method = Method::Ecc;
@@ -79,7 +92,7 @@ void EccMapper::writeCnot(unsigned short control, unsigned short target) {
 
 //-------------------------------------------------------------------------------------------------------------------
 
-Q3ShorEccMapper::Q3ShorEccMapper(qc::QuantumComputation& qc, Architecture& architecture): EccMapper(qc, architecture, Ecc::Q3, 3) {}
+Q3ShorEccMapper::Q3ShorEccMapper(qc::QuantumComputation& qc): EccMapper({Ecc::Q3, 3, Q3ShorEccMapper::getEccName()}, qc) {}
 
 void Q3ShorEccMapper::writeEccEncoding() {
 	const int nQubits = qc.getNqubits();
@@ -117,9 +130,9 @@ void Q3ShorEccMapper::mapGate(std::unique_ptr<qc::Operation> &gate) {
     case qc::Vdag:
         //TODO controlled/multitarget check
         i = gate.get()->getTargets()[0];
-        qcMapped.emplace_back<qc::StandardOperation>(nQubits*nRedundantQubits, i, gate.get()->getType());
-        qcMapped.emplace_back<qc::StandardOperation>(nQubits*nRedundantQubits, i+nQubits, gate.get()->getType());
-        qcMapped.emplace_back<qc::StandardOperation>(nQubits*nRedundantQubits, i+2*nQubits, gate.get()->getType());
+        qcMapped.emplace_back<qc::StandardOperation>(nQubits*ecc.nRedundantQubits, i, gate.get()->getType());
+        qcMapped.emplace_back<qc::StandardOperation>(nQubits*ecc.nRedundantQubits, i+nQubits, gate.get()->getType());
+        qcMapped.emplace_back<qc::StandardOperation>(nQubits*ecc.nRedundantQubits, i+2*nQubits, gate.get()->getType());
         break;
 
     case qc::U3:
@@ -135,14 +148,17 @@ void Q3ShorEccMapper::mapGate(std::unique_ptr<qc::Operation> &gate) {
     case qc::Peres:
     case qc::Peresdag:
     case qc::Compound:
-    case qc::ClassicControlled:break;
-    default: throw QMAPException("Gate not possible to encode in error code!");
+    case qc::ClassicControlled:
+    default:
+        results.output_gates = -1;
+        results.output_qubits = -1;
+        throw QMAPException("Gate not possible to encode in error code!");
     }
 }
 
 //--------------------------------------------------------------------------------------------------------------------------
 
-Q9ShorEccMapper::Q9ShorEccMapper(qc::QuantumComputation& qc, Architecture& architecture) : EccMapper(qc, architecture, Ecc::Q9, 9) {
+Q9ShorEccMapper::Q9ShorEccMapper(qc::QuantumComputation& qc) : EccMapper({Ecc::Q9, 9, Q9ShorEccMapper::getEccName()}, qc) {
 }
 
 void Q9ShorEccMapper::writeEccEncoding() {
@@ -222,13 +238,16 @@ void Q9ShorEccMapper::mapGate(std::unique_ptr<qc::Operation> &gate) {
     case qc::Peres:
     case qc::Peresdag:
     case qc::Compound:
-    case qc::ClassicControlled:break;
-    default: throw QMAPException("Gate not possible to encode in error code!");
+    case qc::ClassicControlled:
+    default:
+        results.output_gates = -1;
+        results.output_qubits = -1;
+        throw QMAPException("Gate not possible to encode in error code!");
     }
     //TODO controlled/multitarget check
     i = gate.get()->getTargets()[0];
     for(int j=0;j<9;j++) {
-        qcMapped.emplace_back<qc::StandardOperation>(nQubits*nRedundantQubits, i+j*nQubits, type);
+        qcMapped.emplace_back<qc::StandardOperation>(nQubits*ecc.nRedundantQubits, i+j*nQubits, type);
     }
 }
 

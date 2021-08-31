@@ -8,6 +8,7 @@
 #include <boost/program_options.hpp>
 
 #include "ecc/EccMapper.hpp"
+#include "Architecture.hpp"
 
 int main(int argc, char** argv) {
     namespace po = boost::program_options;
@@ -44,30 +45,20 @@ int main(int argc, char** argv) {
 		std::cerr << ss.str() << std::endl;
 		std::exit(1);
 	}
-	const std::string cm = "extern/architectures/ibm_qx5.arch";
-	Architecture arch{};
-	try {
-		arch.loadCouplingMap(cm);
-	} catch (std::exception const& e) {
-		std::stringstream ss{};
-		ss << "Could not import coupling map: " << e.what();
-		std::cerr << ss.str() << std::endl;
-		std::exit(1);
-	}
 
-
-    //TODO: read args and instantiate appropriate mapper
     EccMapper *mapper = nullptr;
 
     const std::string eccName = vm["ecc"].as<std::string>();
 
-    if(eccName.compare("Q3Shor")==0) {
-        mapper = new Q3ShorEccMapper(qc, arch);
-    } else if(eccName.compare("Q9Shor")==0) {
-        mapper = new Q9ShorEccMapper(qc, arch);
+    if(eccName.compare(Q3ShorEccMapper::getEccName())==0) {
+        mapper = new Q3ShorEccMapper(qc);
+    } else if(eccName.compare(Q9ShorEccMapper::getEccName())==0) {
+        mapper = new Q9ShorEccMapper(qc);
     } else {
         std::cerr << "No ECC found for " << eccName << std::endl;
-        std::cerr << "Available ECCs: Q3Shor, Q9Shor" << std::endl;
+        std::cerr << "Available ECCs: ";
+        std::cerr << Q3ShorEccMapper::getEccName() << ", ";
+        std::cerr << Q9ShorEccMapper::getEccName() << std::endl;
         std::exit(1);
     }
 
