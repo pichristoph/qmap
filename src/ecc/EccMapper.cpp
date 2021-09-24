@@ -92,7 +92,7 @@ void EccMapper::writeCnot(unsigned short control, unsigned short target) {
 
 //-------------------------------------------------------------------------------------------------------------------
 
-Q3ShorEccMapper::Q3ShorEccMapper(qc::QuantumComputation& qc): EccMapper({Ecc::Q3, 3, Q3ShorEccMapper::getEccName()}, qc) {}
+Q3ShorEccMapper::Q3ShorEccMapper(qc::QuantumComputation& qc): EccMapper({Ecc::Q3Shor, 3, Q3ShorEccMapper::getEccName()}, qc) {}
 
 void Q3ShorEccMapper::writeEccEncoding() {
 	const int nQubits = qc.getNqubits();
@@ -158,7 +158,7 @@ void Q3ShorEccMapper::mapGate(std::unique_ptr<qc::Operation> &gate) {
 
 //--------------------------------------------------------------------------------------------------------------------------
 
-Q9ShorEccMapper::Q9ShorEccMapper(qc::QuantumComputation& qc) : EccMapper({Ecc::Q9, 9, Q9ShorEccMapper::getEccName()}, qc) {
+Q9ShorEccMapper::Q9ShorEccMapper(qc::QuantumComputation& qc) : EccMapper({Ecc::Q9Shor, 9, Q9ShorEccMapper::getEccName()}, qc) {
 }
 
 void Q9ShorEccMapper::writeEccEncoding() {
@@ -251,4 +251,55 @@ void Q9ShorEccMapper::mapGate(std::unique_ptr<qc::Operation> &gate) {
     }
 }
 
+//--------------------------------------------------------------------------------------------------------------------------
+
+IdEccMapper::IdEccMapper(qc::QuantumComputation& qc) : EccMapper({Ecc::Id, 1, IdEccMapper::getEccName()}, qc) {
+}
+
+
+void IdEccMapper::writeEccEncoding() {}
+
+void IdEccMapper::writeEccDecoding() {}
+
+void IdEccMapper::mapGate(std::unique_ptr<qc::Operation> &gate) {
+    const int nQubits = qc.getNqubits();
+    int i;
+    switch(gate.get()->getType()) {
+    case qc::I: break;
+    case qc::X:
+    case qc::H:
+    case qc::Y:
+    case qc::Z:
+    //TODO check S, T, V
+    case qc::S:
+    case qc::Sdag:
+    case qc::T:
+    case qc::Tdag:
+    case qc::V:
+    case qc::Vdag:
+        //TODO controlled/multitarget check
+        i = gate.get()->getTargets()[0];
+        qcMapped.emplace_back<qc::StandardOperation>(nQubits*ecc.nRedundantQubits, i, gate.get()->getType());
+        break;
+
+    case qc::U3:
+    case qc::U2:
+    case qc::Phase:
+    case qc::SX:
+    case qc::SXdag:
+    case qc::RX:
+    case qc::RY:
+    case qc::RZ:
+    case qc::SWAP:
+    case qc::iSWAP:
+    case qc::Peres:
+    case qc::Peresdag:
+    case qc::Compound:
+    case qc::ClassicControlled:
+    default:
+        results.output_gates = -1;
+        results.output_qubits = -1;
+        throw QMAPException("Gate not possible to encode in error code!");
+    }
+}
 

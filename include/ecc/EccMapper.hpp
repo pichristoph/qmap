@@ -14,7 +14,7 @@ class EccMapper {
 public:
 
     enum Ecc {
-		Q3, Q9
+		Id, Q3Shor, Q9Shor
 	};
     struct EccInfo {
         Ecc enumID;
@@ -128,5 +128,26 @@ protected:
 };
 
 #endif //QMAP_Q9ShorEccMapper_HPP
+
+#ifndef QMAP_IdEccMapper_HPP
+#define QMAP_IdEccMapper_HPP
+
+class IdEccMapper: public EccMapper {
+public:
+    IdEccMapper(qc::QuantumComputation& qc);
+
+    static const std::string getEccName() {
+        return "Id";
+    }
+
+protected:
+    void writeEccEncoding();
+
+	void writeEccDecoding();
+
+	void mapGate(std::unique_ptr<qc::Operation> &gate) override;
+};
+
+#endif //QMAP_IdEccMapper_HPP
 
 

@@ -50,13 +50,16 @@ int main(int argc, char** argv) {
 
     const std::string eccName = vm["ecc"].as<std::string>();
 
-    if(eccName.compare(Q3ShorEccMapper::getEccName())==0) {
+    if(eccName.compare(IdEccMapper::getEccName())==0) {
+        mapper = new IdEccMapper(qc);
+    } else if(eccName.compare(Q3ShorEccMapper::getEccName())==0) {
         mapper = new Q3ShorEccMapper(qc);
     } else if(eccName.compare(Q9ShorEccMapper::getEccName())==0) {
         mapper = new Q9ShorEccMapper(qc);
     } else {
         std::cerr << "No ECC found for " << eccName << std::endl;
         std::cerr << "Available ECCs: ";
+        std::cerr << IdEccMapper::getEccName() << ", ";
         std::cerr << Q3ShorEccMapper::getEccName() << ", ";
         std::cerr << Q9ShorEccMapper::getEccName() << std::endl;
         std::exit(1);
