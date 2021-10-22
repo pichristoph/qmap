@@ -46,22 +46,22 @@ int main(int argc, char** argv) {
 		std::exit(1);
 	}
 
-    EccMapper *mapper = nullptr;
+    qc::Ecc *mapper = nullptr;
 
     const std::string eccName = vm["ecc"].as<std::string>();
 
-    if(eccName.compare(IdEccMapper::getEccName())==0) {
-        mapper = new IdEccMapper(qc);
-    } else if(eccName.compare(Q3ShorEccMapper::getEccName())==0) {
-        mapper = new Q3ShorEccMapper(qc);
-    } else if(eccName.compare(Q9ShorEccMapper::getEccName())==0) {
-        mapper = new Q9ShorEccMapper(qc);
+    if(eccName.compare(qc::IdEcc::getName())==0) {
+        mapper = new qc::IdEcc(qc);
+    } else if(eccName.compare(qc::Q3ShorEcc::getName())==0) {
+        mapper = new qc::Q3ShorEcc(qc);
+    } else if(eccName.compare(qc::Q9ShorEcc::getName())==0) {
+        mapper = new qc::Q9ShorEcc(qc);
     } else {
         std::cerr << "No ECC found for " << eccName << std::endl;
         std::cerr << "Available ECCs: ";
-        std::cerr << IdEccMapper::getEccName() << ", ";
-        std::cerr << Q3ShorEccMapper::getEccName() << ", ";
-        std::cerr << Q9ShorEccMapper::getEccName() << std::endl;
+        std::cerr << qc::IdEcc::getName() << ", ";
+        std::cerr << qc::Q3ShorEcc::getName() << ", ";
+        std::cerr << qc::Q9ShorEcc::getName() << std::endl;
         std::exit(1);
     }
 

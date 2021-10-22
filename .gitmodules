@@ -1,5 +1,9 @@
 [submodule "extern/qfr"]
 	path = extern/qfr
-	url = https://github.com/iic-jku/qfr.git
-	branch = master
+	url = https://github.com/pichristoph/qfr.git
+	branch = feature/ecc
     shallow = true
+[submodule "qfr"]
+	path = qfr
+	url = https://github.com/pichristoph/qfr
+	branch = feature/ecc
