@@ -86,7 +86,7 @@ void EccMapper::initResults() {
 }
 
 void EccMapper::writeCnot(unsigned short control, unsigned short target) {
-    qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(), qc::Control(control), target, qc::X);
+    qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(), dd::Controls{dd::Control{(signed char)control}}, target, qc::X);
 }
 
 

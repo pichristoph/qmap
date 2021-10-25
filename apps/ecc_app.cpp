@@ -6,6 +6,10 @@
 #include <cmath>
 #include <iostream>
 #include <boost/program_options.hpp>
+#include <eccs/Ecc.hpp>
+#include <eccs/IdEcc.hpp>
+#include <eccs/Q3ShorEcc.hpp>
+#include <eccs/Q9ShorEcc.hpp>
 
 #include "ecc/EccMapper.hpp"
 #include "Architecture.hpp"
@@ -46,31 +50,32 @@ int main(int argc, char** argv) {
 		std::exit(1);
 	}
 
-    qc::Ecc *mapper = nullptr;
+	qc::MatrixDD test;
+    Ecc *mapper = nullptr;
 
     const std::string eccName = vm["ecc"].as<std::string>();
 
-    if(eccName.compare(qc::IdEcc::getName())==0) {
-        mapper = new qc::IdEcc(qc);
-    } else if(eccName.compare(qc::Q3ShorEcc::getName())==0) {
-        mapper = new qc::Q3ShorEcc(qc);
-    } else if(eccName.compare(qc::Q9ShorEcc::getName())==0) {
-        mapper = new qc::Q9ShorEcc(qc);
+    if(eccName.compare(IdEcc::getName())==0) {
+        mapper = new IdEcc(qc);
+    } else if(eccName.compare(Q3ShorEcc::getName())==0) {
+        mapper = new Q3ShorEcc(qc);
+    } else if(eccName.compare(Q9ShorEcc::getName())==0) {
+        mapper = new Q9ShorEcc(qc);
     } else {
         std::cerr << "No ECC found for " << eccName << std::endl;
         std::cerr << "Available ECCs: ";
-        std::cerr << qc::IdEcc::getName() << ", ";
-        std::cerr << qc::Q3ShorEcc::getName() << ", ";
-        std::cerr << qc::Q9ShorEcc::getName() << std::endl;
+        std::cerr << IdEcc::getName() << ", ";
+        std::cerr << Q3ShorEcc::getName() << ", ";
+        std::cerr << Q9ShorEcc::getName() << std::endl;
         std::exit(1);
     }
 
 
-    mapper->map();
+    mapper->apply();
 
 	mapper->dumpResult(vm["out"].as<std::string>());
 
-	mapper->printResult(std::cout, vm.count("ps"));
+//	mapper->printResult(std::cout, vm.count("ps"));
 
 	delete mapper;
 }
