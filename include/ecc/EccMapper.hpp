@@ -19,12 +19,16 @@ public:
     struct EccInfo {
         Ecc enumID;
         int nRedundantQubits;
+        int nMoreClassicals;
         std::string name;
     };
 
     const struct EccInfo ecc;
 
-	EccMapper(struct EccInfo ecc_type, qc::QuantumComputation& qc);
+    bool done = false;
+    bool doMeasuring = false;
+
+	EccMapper(struct EccInfo ecc_type, qc::QuantumComputation& qc, bool doMeasuring);
 	virtual ~EccMapper() = default;
 
 	void map();
@@ -77,9 +81,12 @@ protected:
 
 	virtual void writeEccDecoding()=0;
 
+	virtual void measureAndCorrect()=0;
+
 	virtual void mapGate(std::unique_ptr<qc::Operation> &gate)=0;
 
-    void writeToffoli(unsigned short c1, unsigned short c2, unsigned short target);
+    void writeToffoli(unsigned short c1, bool pos1, unsigned short c2, bool pos2, unsigned short target);
+    void writeToffoliPhase(unsigned short c1, bool pos1, unsigned short c2, bool pos2, unsigned short target);
     void writeCnot(unsigned short control, unsigned short target);
 
 };
@@ -92,7 +99,7 @@ protected:
 
 class Q3ShorEccMapper: public EccMapper {
 public:
-    Q3ShorEccMapper(qc::QuantumComputation& qc);
+    Q3ShorEccMapper(qc::QuantumComputation& qc, bool doMeasuring);
 
     static const std::string getEccName() {
         return "Q3Shor";
@@ -102,6 +109,8 @@ protected:
     void writeEccEncoding() override;
 
 	void writeEccDecoding() override;
+
+	void measureAndCorrect() override;
 
 	void mapGate(std::unique_ptr<qc::Operation> &gate) override;
 };
@@ -113,7 +122,7 @@ protected:
 
 class Q9ShorEccMapper: public EccMapper {
 public:
-    Q9ShorEccMapper(qc::QuantumComputation& qc);
+    Q9ShorEccMapper(qc::QuantumComputation& qc, bool doMeasuring);
 
     static const std::string getEccName() {
         return "Q9Shor";
@@ -123,6 +132,8 @@ protected:
     void writeEccEncoding();
 
 	void writeEccDecoding();
+
+	void measureAndCorrect() override;
 
 	void mapGate(std::unique_ptr<qc::Operation> &gate) override;
 };
@@ -134,7 +145,7 @@ protected:
 
 class IdEccMapper: public EccMapper {
 public:
-    IdEccMapper(qc::QuantumComputation& qc);
+    IdEccMapper(qc::QuantumComputation& qc, bool doMeasuring);
 
     static const std::string getEccName() {
         return "Id";
@@ -144,6 +155,8 @@ protected:
     void writeEccEncoding();
 
 	void writeEccDecoding();
+
+	void measureAndCorrect() override;
 
 	void mapGate(std::unique_ptr<qc::Operation> &gate) override;
 };

@@ -41,7 +41,10 @@ void Mapper::createLayers() {
 		bool singleQubit = gate->getControls().empty();
 		short control = -1;
 		if (!singleQubit) {
-			control = static_cast<short>(gate->getControls().at(0).qubit);
+            assert(gate->getControls().size() == 1);
+            for (auto const& control_qubit: gate->getControls()) {
+                control = static_cast<short>(control_qubit.qubit);
+            }
 		}
 		unsigned short target = gate->getTargets().at(0);
 		size_t layer = 0;

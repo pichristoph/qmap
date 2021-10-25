@@ -18,6 +18,7 @@ int main(int argc, char** argv) {
             ("in", po::value<std::string>()->required(), "File to read from")
             ("out", po::value<std::string>()->required(), "File to write to")
             ("ecc", po::value<std::string>()->required(), "Error correcting code to use")
+            ("measure", po::value<bool>()->required(), "measure or not")
             ("ps", "print statistics")
             ("verbose", "Increase verbosity and output additional information to stderr")
             ;
@@ -49,13 +50,14 @@ int main(int argc, char** argv) {
     EccMapper *mapper = nullptr;
 
     const std::string eccName = vm["ecc"].as<std::string>();
+    const bool measureYN = vm["measure"].as<bool>();
 
     if(eccName.compare(IdEccMapper::getEccName())==0) {
-        mapper = new IdEccMapper(qc);
+        mapper = new IdEccMapper(qc, measureYN);
     } else if(eccName.compare(Q3ShorEccMapper::getEccName())==0) {
-        mapper = new Q3ShorEccMapper(qc);
+        mapper = new Q3ShorEccMapper(qc, measureYN);
     } else if(eccName.compare(Q9ShorEccMapper::getEccName())==0) {
-        mapper = new Q9ShorEccMapper(qc);
+        mapper = new Q9ShorEccMapper(qc, measureYN);
     } else {
         std::cerr << "No ECC found for " << eccName << std::endl;
         std::cerr << "Available ECCs: ";
@@ -67,10 +69,8 @@ int main(int argc, char** argv) {
 
 
     mapper->map();
-
-	mapper->dumpResult(vm["out"].as<std::string>());
-
-	mapper->printResult(std::cout, vm.count("ps"));
+    mapper->dumpResult(vm["out"].as<std::string>());
+    mapper->printResult(std::cout, vm.count("ps"));
 
 	delete mapper;
 }
