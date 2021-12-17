@@ -9,6 +9,7 @@
 #include <eccs/Ecc.hpp>
 #include <eccs/IdEcc.hpp>
 #include <eccs/Q3ShorEcc.hpp>
+#include <eccs/Q5LaflammeEcc.hpp>
 #include <eccs/Q7SteaneEcc.hpp>
 #include <eccs/Q9SurfaceEcc.hpp>
 #include <eccs/Q9ShorEcc.hpp>
@@ -25,6 +26,8 @@ int main(int argc, char** argv) {
             ("out", po::value<std::string>()->required(), "File to write to")
             ("ecc", po::value<std::string>()->required(), "Error correcting code to use")
             ("freq", po::value<int>(), "frequency of error correction (0=at the end, n>0 = after every n-th gate)")
+            ("decomposeMC", "decompose multi-controlled gates into single-controlled gates")
+            ("cliffOnly", "decompose gates to clifford gates")
             ("ps", "print statistics")
             ("verbose", "Increase verbosity and output additional information to stderr")
             ;
@@ -62,17 +65,21 @@ int main(int argc, char** argv) {
     Ecc *mapper = nullptr;
 
     const std::string eccName = vm["ecc"].as<std::string>();
+    const bool decomposeMC = vm.count("decomposeMC");
+    const bool cliffOnly = vm.count("cliffOnly");
 
     if(eccName.compare(IdEcc::getName())==0) {
-        mapper = new IdEcc(qc, measureFrequency);
+        mapper = new IdEcc(qc, measureFrequency, decomposeMC, cliffOnly);
     } else if(eccName.compare(Q3ShorEcc::getName())==0) {
-        mapper = new Q3ShorEcc(qc, measureFrequency);
+        mapper = new Q3ShorEcc(qc, measureFrequency, decomposeMC, cliffOnly);
+    } else if(eccName.compare(Q5LaflammeEcc::getName())==0) {
+        mapper = new Q5LaflammeEcc(qc, measureFrequency, decomposeMC, cliffOnly);
     } else if(eccName.compare(Q7SteaneEcc::getName())==0) {
-        mapper = new Q7SteaneEcc(qc, measureFrequency);
+        mapper = new Q7SteaneEcc(qc, measureFrequency, decomposeMC, cliffOnly);
     } else if(eccName.compare(Q9ShorEcc::getName())==0) {
-        mapper = new Q9ShorEcc(qc, measureFrequency);
+        mapper = new Q9ShorEcc(qc, measureFrequency, decomposeMC, cliffOnly);
     } else if(eccName.compare(Q9SurfaceEcc::getName())==0) {
-        mapper = new Q9SurfaceEcc(qc, measureFrequency);
+        mapper = new Q9SurfaceEcc(qc, measureFrequency, decomposeMC, cliffOnly);
     } else {
         std::cerr << "No ECC found for " << eccName << std::endl;
         std::cerr << "Available ECCs: ";
