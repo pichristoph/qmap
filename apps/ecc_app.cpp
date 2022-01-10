@@ -13,6 +13,7 @@
 #include <eccs/Q7SteaneEcc.hpp>
 #include <eccs/Q9SurfaceEcc.hpp>
 #include <eccs/Q9ShorEcc.hpp>
+#include <eccs/Q18SurfaceEcc.hpp>
 
 #include "ecc/EccMapper.hpp"
 #include "Architecture.hpp"
@@ -80,6 +81,8 @@ int main(int argc, char** argv) {
         mapper = new Q9ShorEcc(qc, measureFrequency, decomposeMC, cliffOnly);
     } else if(eccName.compare(Q9SurfaceEcc::getName())==0) {
         mapper = new Q9SurfaceEcc(qc, measureFrequency, decomposeMC, cliffOnly);
+    } else if(eccName.compare(Q18SurfaceEcc::getName())==0) {
+        mapper = new Q18SurfaceEcc(qc, measureFrequency, decomposeMC, cliffOnly);
     } else {
         std::cerr << "No ECC found for " << eccName << std::endl;
         std::cerr << "Available ECCs: ";
@@ -87,6 +90,7 @@ int main(int argc, char** argv) {
         std::cerr << Q3ShorEcc::getName() << ", ";
         std::cerr << Q7SteaneEcc::getName() << ", ";
         std::cerr << Q9ShorEcc::getName() << ", ";
+        std::cerr << Q18SurfaceEcc::getName() << ", ";
         std::cerr << Q9SurfaceEcc::getName() << std::endl;
         std::exit(1);
     }
